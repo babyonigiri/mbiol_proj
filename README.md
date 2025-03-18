@@ -1,2 +1,6 @@
 # mbiol_proj
-Code for MBiol project
+Code used for MBiol project.
+
+## Superlineage analysis overview
+
+## Genome wide association study pipeline
