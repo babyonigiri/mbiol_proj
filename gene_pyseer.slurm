@@ -20,4 +20,5 @@ pyseer  --phenotypes /data/zool-bactgenomics/XXX/pyseer_env/0_15_17_phenotypes.t
         --min-af 0.01 \
         --max-af 0.99 \
         --cpu 8 \
-        --print-samples > /data/zool-bactgenomics/kebl7130/pyseer_env/gene_gwas/gene_gwas_results.txt
+        --output-patterns /data/zool-bactgenomics/XXX/pyseer_env/gene_gwas/gene_bonferroni_correction.txt \
+        --print-samples > /data/zool-bactgenomics/XXX/pyseer_env/gene_gwas/gene_gwas_results.txt
