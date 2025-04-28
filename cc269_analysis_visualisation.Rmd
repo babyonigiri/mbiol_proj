@@ -1,0 +1,605 @@
+###################################################################
+################### # Preparing the workspace #####################
+###################################################################
+
+```{r load-packages}
+library(ggtree)
+library(tidyverse)
+library(phytools)
+library(ape)
+library(readxl)
+library(viridis)
+library(dplyr) 
+library(ggnewscale)
+library(scales)
+library(ggplot2)
+library(cowplot)
+library(ggrepel)
+```
+
+```{r load-data}
+# Load the LIN data
+cc269_data <- read_excel("cc269_filtered_LIN.xlsx")
+```
+
+###################################################################
+####### # Investigating the first position of the LIN code ########
+###################################################################
+
+```{r plot-first-position}
+# Bar graph
+cc269_lin_threshold_1 <- ggplot(cc269_data, aes(x = lin_27.04)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 1", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(cc269_lin_threshold_1)
+
+# Count frequency
+cc269_lin_threshold_1_frequency <- table(cc269_data$lin_27.04)
+print(cc269_lin_threshold_1_frequency)
+```
+###################################################################
+### # Investigating prefix group "0" and other clonal complexes ###
+###################################################################
+
+```{r load-superlineage-data}
+# Load the superlineage 0_ data
+superlineage_0_data <- read_excel("0_to_filter.xlsx", col_types = "text")
+```
+
+```{r plot-ccs}
+# Bar graph
+superlineage_0_cc <- ggplot(superlineage_0_data, aes(x = clonal_complex)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "Clonal complexes in superlineage 0", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(superlineage_0_cc)
+
+# Count frequency
+superlineage_0_cc_frequency <- table(superlineage_0_data$clonal_complex)
+print(superlineage_0_cc_frequency)
+```
+
+###################################################################
+############# # Plotting the "0" prefix group tree ################
+###################################################################
+
+```{r plot-tree}
+# Load the tree
+superlineage_0_lin_tree <- read.tree("clonalframeml_lin_.labelled_tree.newick")
+
+# Midpoint root the tree
+superlineage_0_lin_tree <- midpoint.root(superlineage_0_lin_tree)
+
+# Plot the tree
+superlineage_0_lin_tree_plot <- ggtree(superlineage_0_lin_tree)
+print(superlineage_0_lin_tree_plot)
+```
+
+```{r prepare-tree-data}
+# Load the data for the tree
+superlineage_0_tree_data <- read_excel("superlineage_0_lin_tree_data.xlsx", col_types = "text")
+
+# Prepare the data for plotting
+superlineage_0_tree_data_matched <- data.frame(
+  tip = superlineage_0_lin_tree$tip.label,
+  ST = superlineage_0_tree_data$`ST`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  clonal_complex = superlineage_0_tree_data$`clonal_complex`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_2 = superlineage_0_tree_data$`lin_48`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_3 = superlineage_0_tree_data$`lin_59`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_4 = superlineage_0_tree_data$`lin_71.03`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_5 = superlineage_0_tree_data$`lin_79`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_6 = superlineage_0_tree_data$`lin_88.26`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_7 = superlineage_0_tree_data$`lin_94.96`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_8 = superlineage_0_tree_data$`lin_98.95`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_9 = superlineage_0_tree_data$`lin_99.47`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_10 = superlineage_0_tree_data$`lin_99.77`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_11 = superlineage_0_tree_data$`lin_99.85`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_12 = superlineage_0_tree_data$`lin_99.92`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)],
+  lin_code_13 = superlineage_0_tree_data$`lin_100`[match(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data$id)])
+```
+
+```{r plot-figure-tree-labels}
+# Create labels to add to the previous rectangular tree
+labels <- split(superlineage_0_tree_data_matched$tip, superlineage_0_tree_data_matched$lin_code_2)
+
+# Only keep groups with >25 tips
+labels <- labels[sapply(labels, length) > 15]
+
+# Create the base tree and attach metadata
+superlineage_0_tree_plot_lin_2_label_blocks <- ggtree(superlineage_0_lin_tree) %<+% superlineage_0_tree_data_matched
+
+# Add labels to the blocks (y = mid-points; x = distance away from the tree)
+for (i in seq_along(labels)) {
+  # Compute the midpoint of the clade
+  label_midpoint <- mean(range(superlineage_0_tree_plot_lin_2_label_blocks$data$y[
+    superlineage_0_tree_plot_lin_2_label_blocks$data$label %in% labels[[i]]]))
+  
+  # Add a label at the midpoint
+  superlineage_0_tree_plot_lin_2_label_blocks <- superlineage_0_tree_plot_lin_2_label_blocks +
+    annotate("text",
+             x = max(superlineage_0_tree_plot_lin_2_label_blocks$data$x) + 0.0001, 
+             y = label_midpoint, 
+             label = names(labels)[i], 
+             size = 4, 
+             hjust = 0)
+}
+
+# Add clonal_complex and lin_code_2 side tiles
+superlineage_0_tree_plot_lin_2_label_blocks <- superlineage_0_tree_plot_lin_2_label_blocks +
+  geom_tile(aes(x = max(x) + 0.00035, fill = clonal_complex), width = 0.0001, height = 1) +
+  scale_fill_viridis_d(option = "turbo", name = "Clonal complex", guide = guide_legend(order = 1, byrow = TRUE)) +
+
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 15),
+        legend.spacing.x = unit(2, "cm"),
+        legend.spacing.y = unit(0.5, "cm"),
+        plot.margin = margin(25, 25, 25, 25))
+
+# Get the max x and y from the tree data
+x_max <- max(superlineage_0_tree_plot_lin_2_label_blocks$data$x, na.rm = TRUE)
+y_range <- range(superlineage_0_tree_plot_lin_2_label_blocks$data$y, na.rm = TRUE)
+
+# Extend the plot limits
+superlineage_0_tree_plot_lin_2_label_blocks <- superlineage_0_tree_plot_lin_2_label_blocks +
+  xlim(NA, x_max + 0.0005) +  # give space for labels
+  ylim(y_range[1] - 20, y_range[2] + 20)  # space for top and bottom labels
+
+# Extract tree data
+tree_data <- superlineage_0_tree_plot_lin_2_label_blocks$data
+
+# Loop over each large group and draw a rectangle only on its own y-range
+for (i in seq_along(labels)) {
+  group_tips <- labels[[i]]
+  group_name <- names(labels)[i]
+  
+  # Get y-values of this group's tips
+  tip_y_vals <- tree_data$y[tree_data$label %in% group_tips]
+  
+  # Safety skip
+  if (length(tip_y_vals) == 0) next
+  
+  # Define rectangle bounds (only this group's tips)
+  ymin <- min(tip_y_vals) - 0.5
+  ymax <- max(tip_y_vals) + 0.5
+  xmin <- min(tree_data$x, na.rm = TRUE)
+  xmax <- max(tree_data$x, na.rm = TRUE)
+  
+  rect_df <- data.frame(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  
+  superlineage_0_tree_plot_lin_2_label_blocks <- superlineage_0_tree_plot_lin_2_label_blocks +
+    geom_rect(data = rect_df,
+              aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+              fill = scales::hue_pal()(length(labels))[i],
+              alpha = 0.2,
+              inherit.aes = FALSE)
+}
+
+
+print(superlineage_0_tree_plot_lin_2_label_blocks)
+```
+###################################################################
+########### # cc269-associated two-position prefix groups #########
+###################################################################
+
+```{r prune-tree}
+# Extract the tips from the relevant LIN code 3 threshold
+superlineage_0_tree_data_matched_pruned_tips <- superlineage_0_tree_data_matched %>%
+  filter(lin_code_2 %in% c("0_17", "0_27", "0_18","0_16", "0_19", "0_22",
+                           "0_28", "0_15", "0_35", "0_23", "0_24", "0_20")) %>%
+  pull(tip)
+
+superlineage_0_tree_data_matched_pruned_tips <- as.character(superlineage_0_tree_data_matched_pruned_tips)
+
+# Find the node
+superlineage_0_tree_data_matched_pruned_node <- getMRCA(superlineage_0_lin_tree,superlineage_0_tree_data_matched_pruned_tips)
+
+# Extract the subtree
+superlineage_0_lin_tree_pruned <- drop.tip(superlineage_0_lin_tree, setdiff(superlineage_0_lin_tree$tip.label, superlineage_0_tree_data_matched_pruned_tips))
+
+# Print tree
+superlineage_0_lin_tree_pruned_plot <- ggtree(superlineage_0_lin_tree_pruned)
+print(superlineage_0_lin_tree_pruned_plot)
+```
+
+```{r prepare-pruned-tree-data}
+# Extract the relevant metadata
+superlineage_0_tree_data_matched_pruned_data <- superlineage_0_tree_data_matched %>%
+  filter(lin_code_2 %in% c("0_17", "0_27", "0_18","0_16", "0_19", "0_22",
+                           "0_28", "0_15", "0_35", "0_23", "0_24", "0_20"))
+```
+
+```{r pruned-tree-labelled-figure}
+
+# Create labels: group tips by lin_code_2
+labels <- split(superlineage_0_tree_data_matched_pruned_data$tip, 
+                superlineage_0_tree_data_matched_pruned_data$lin_code_2)
+
+# Create the base tree and attach metadata
+superlineage_0_lin_tree_pruned_lin_side <- ggtree(superlineage_0_lin_tree_pruned) %<+% 
+  superlineage_0_tree_data_matched_pruned_data
+
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 15),
+        legend.spacing.x = unit(2, "cm"),
+        legend.spacing.y = unit(0.5, "cm"),
+        plot.margin = margin(25, 25, 25, 25))
+
+# Compute max x and y
+x_max <- max(superlineage_0_lin_tree_pruned_lin_side$data$x, na.rm = TRUE)
+y_range <- range(superlineage_0_lin_tree_pruned_lin_side$data$y, na.rm = TRUE)
+
+# Extend plot limits to give space for labels
+superlineage_0_lin_tree_pruned_lin_side <- superlineage_0_lin_tree_pruned_lin_side +
+  xlim(NA, x_max + 0.0005) + 
+  ylim(y_range[1] - 20, y_range[2] + 20)
+
+# Add midpoint labels, staggered into three x-positions
+## Define three x-offsets
+offsets <- c(-0.0001, 0, 0.0002)  # left, middle, right
+
+## First, get all midpoints
+label_midpoints <- sapply(labels, function(group) {
+  mean(range(superlineage_0_lin_tree_pruned_lin_side$data$y[
+    superlineage_0_lin_tree_pruned_lin_side$data$label %in% group]))
+})
+
+## Sort midpoints from bottom to top
+sorted_indices <- order(label_midpoints)
+
+## Create a data frame to hold linking line data
+link_lines <- data.frame(x = numeric(), xend = numeric(), y = numeric(), yend = numeric())
+
+## Loop in sorted y order, and assign offset cycling through 3 columns
+for (j in seq_along(sorted_indices)) {
+  i <- sorted_indices[j]  # i = actual label index
+  
+  label_midpoint <- label_midpoints[i]
+  
+  ### Cycle through offsets: 1 → 2 → 3 → 1 → 2 → 3...
+  column_index <- (j - 1) %% 3 + 1
+  
+  label_x_position <- x_max + 0.00025 + offsets[column_index]
+  
+  ### Add label
+  superlineage_0_lin_tree_pruned_lin_side <- superlineage_0_lin_tree_pruned_lin_side +
+    annotate("text",
+             x = label_x_position, 
+             y = label_midpoint, 
+             label = names(labels)[i],
+             size = 4, 
+             hjust = 0)
+  
+  ### Save line coordinates
+  link_lines <- rbind(link_lines, data.frame(
+    x = x_max,
+    xend = label_x_position,
+    y = label_midpoint,
+    yend = label_midpoint
+  ))
+}
+
+# Add linking lines (after loop)
+superlineage_0_lin_tree_pruned_lin_side <- superlineage_0_lin_tree_pruned_lin_side +
+  geom_segment(data = link_lines,
+               aes(x = x,
+                   xend = xend,
+                   y = y,
+                   yend = yend),
+               color = "grey50",
+               linetype = "dashed",
+               linewidth = 0.3,
+               inherit.aes = FALSE)
+
+# Add rectangles (background shading) per group
+tree_data <- superlineage_0_lin_tree_pruned_lin_side$data
+
+for (i in seq_along(labels)) {
+  group_tips <- labels[[i]]
+  
+  tip_y_vals <- tree_data$y[tree_data$label %in% group_tips]
+  
+  if (length(tip_y_vals) == 0) next
+  
+  ymin <- min(tip_y_vals)
+  ymax <- max(tip_y_vals)
+  xmin <- min(tree_data$x, na.rm = TRUE)
+  xmax <- max(tree_data$x, na.rm = TRUE)
+  
+  rect_df <- data.frame(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  
+  superlineage_0_lin_tree_pruned_lin_side <- superlineage_0_lin_tree_pruned_lin_side +
+    geom_rect(data = rect_df,
+              aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+              fill = scales::hue_pal()(length(labels))[i],
+              alpha = 0.2,
+              inherit.aes = FALSE)
+}
+
+# Print the final tree
+print(superlineage_0_lin_tree_pruned_lin_side)
+```
+
+```{r plot-two-key-groups}
+# Create a new column to indicate tip color
+superlineage_0_tree_data_matched_pruned_data_gwas <- superlineage_0_tree_data_matched_pruned_data %>%
+  mutate(tip_color = case_when(
+    lin_code_2 == "0_15" ~ "blue",   
+    lin_code_2 == "0_17" ~ "orange", 
+    TRUE ~ "grey90"                  
+  ))
+
+# Plot the phylogenetic tree
+superlineage_0_lin_tree_pruned_gwas <- ggtree(superlineage_0_lin_tree_pruned) %<+%
+  superlineage_0_tree_data_matched_pruned_data_gwas +
+  geom_tippoint(aes(color = tip_color), size = 4) +
+  scale_color_identity() + 
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.2))) +
+  theme(plot.margin = margin(10, 10, 10, 10, unit = "mm"))  
+
+# Define colours for the legend
+gwas_tip_colours <- c("0_15" = "blue", "0_17" = "orange", "Other lineages" = "grey90")
+
+# Create the legend separately
+superlineage_0_lin_tree_pruned_gwas_legend <- ggplot(data = data.frame(x = c(1, 2, 3), y = c(1, 1, 1), label = names(gwas_tip_colours))) +
+  geom_point(aes(x = x, y = y, color = label), size = 4) +  
+  scale_color_manual(name = "Key", values = gwas_tip_colours) +
+  scale_x_continuous(breaks = NULL) + # Hide x-axis
+  scale_y_continuous(breaks = NULL) + # Hide y-axis
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 15),
+        legend.spacing.x = unit(2, "cm"),
+        legend.spacing.y = unit(0.5, "cm"))
+
+# Extract the legend
+superlineage_0_lin_tree_pruned_gwas_legend <- cowplot::get_legend(superlineage_0_lin_tree_pruned_gwas_legend)
+
+# Combine the tree and legend
+superlineage_0_lin_tree_pruned_gwas_plot <- plot_grid(superlineage_0_lin_tree_pruned_gwas, superlineage_0_lin_tree_pruned_gwas_legend, ncol = 1, rel_heights = c(4, 1))
+
+# Display the final plot
+print(superlineage_0_lin_tree_pruned_gwas_plot)
+```
+
+###################################################################
+#### # cc269-associated two-position prefix groups structure ######
+###################################################################
+
+```{r load-cc269-associated-dataset}
+# Load the dataset (cc269-relevant)
+cc269_relevant_lin_data <- read_excel("cc269_relevant_lin_groups.xlsx")
+
+# Replace all NAs with "NA" in the entire dataset
+cc269_relevant_lin_data <- cc269_relevant_lin_data %>%
+  mutate_all(~ ifelse(is.na(.), "NA", .))
+```
+
+```{r plot-counts}
+# Bar graph
+cc269_associated_lin_threshold_2 <- ggplot(cc269_relevant_lin_data, aes(x = lin_48)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(x = "LIN Threshold 2 Group", y = "Count") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 15),
+        legend.spacing.x = unit(2, "cm"),
+        legend.spacing.y = unit(0.5, "cm"),
+        plot.margin = margin(25, 25, 25, 25))
+
+
+# Print
+print(cc269_associated_lin_threshold_2)
+
+# Count frequency
+cc269_associated_lin_threshold_2_freq <- table(cc269_relevant_lin_data$lin_48)
+print(cc269_associated_lin_threshold_2_freq)
+```
+
+###################################################################
+########################## # 0_15 and 0_17 ########################
+###################################################################
+
+```{r 0-15-threshold-3}
+# Subset the data
+subset_0_15 <- subset(cc269_relevant_lin_data, lin_48 == "0_15")
+
+# Bar graph
+lin_3_threshold_0_15 <- ggplot(subset_0_15, aes(x = lin_59)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 3 in 0_15", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_3_threshold_0_15)
+```
+
+```{r 0-15-2-threshold-4}
+# Subset the data
+subset_0_15_2 <- subset(cc269_relevant_lin_data, lin_59 == "0_15_2")
+
+# Bar graph
+lin_4_threshold_0_15_2 <- ggplot(subset_0_15_2, aes(x = lin_71.03)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 4 in 0_15_2", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_4_threshold_0_15_2)
+```
+
+```{r 0-15-2-1-threshold-5}
+# Subset the data
+subset_0_15_2_1 <- subset(cc269_relevant_lin_data, lin_71.03 == "0_15_2_1")
+
+# Bar graph
+lin_5_threshold_0_15_2_1 <- ggplot(subset_0_15_2_1, aes(x = lin_79)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 5 in 0_15_2_1", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_5_threshold_0_15_2_1)
+```
+
+```{r 0-15-2-1-0-threshold-6}
+# Subset the data
+subset_0_15_2_1_0 <- subset(cc269_relevant_lin_data, lin_79 == "0_15_2_1_0")
+
+# Bar graph
+lin_6_threshold_0_15_2_1_0 <- ggplot(subset_0_15_2_1_0, aes(x = lin_88.26)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 6 in 0_15_2_1_0", x = NULL, y = "Count") +
+  theme_minimal() +
+  coord_flip() + # Rotate the bars
+  theme(
+    axis.text = element_text(size = 6), # Adjust axis text size
+    axis.title = element_text(size = 10), # Adjust axis title size
+    plot.title = element_text(size = 12) # Adjust plot title size
+  )
+
+# Print
+print(lin_6_threshold_0_15_2_1_0)
+```
+
+```{r 0-17-threshold-3}
+# Subset the data
+subset_0_17 <- subset(cc269_relevant_lin_data, lin_48 == "0_17")
+
+# Bar graph
+lin_3_threshold_0_17 <- ggplot(subset_0_17, aes(x = lin_59)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 3 in 0_17", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_3_threshold_0_17)
+```
+
+```{r 0-17-0-threshold-4}
+# Subset the data
+subset_0_17_0 <- subset(cc269_relevant_lin_data, lin_59 == "0_17_0")
+
+# Bar graph
+lin_4_threshold_0_17_0 <- ggplot(subset_0_17_0, aes(x = lin_71.03)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 4 in 0_17_0", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_4_threshold_0_17_0)
+```
+
+```{r 0-17-0-0-threshold-5}
+# Subset the data
+subset_0_17_0_0 <- subset(cc269_relevant_lin_data, lin_71.03 == "0_17_0_0")
+
+# Bar graph
+lin_5_threshold_0_17_0_0 <- ggplot(subset_0_17_0_0, aes(x = lin_79)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 5 in 0_17_0_0", x = NULL, y = "Count") +
+  theme_minimal()
+
+# Print
+print(lin_5_threshold_0_17_0_0)
+```
+
+```{r 0-17-0-0-0-threshold-6}
+# Subset the data
+subset_0_17_0_0_0 <- subset(cc269_relevant_lin_data, lin_79 == "0_17_0_0_0")
+
+# Bar graph
+lin_6_threshold_0_17_0_0_0 <- ggplot(subset_0_17_0_0_0, aes(x = lin_88.26)) +
+  geom_bar(fill = "steelblue", color = "grey1") +
+  labs(title = "LINcode threshold 6 in 0_17_0_0_0", x = NULL, y = "Count") +
+  theme_minimal() +
+  coord_flip() + # Rotate the bars
+  theme(
+    axis.text = element_text(size = 6), # Adjust axis text size
+    axis.title = element_text(size = 10), # Adjust axis title size
+    plot.title = element_text(size = 12) # Adjust plot title size
+  )
+
+# Print
+print(lin_6_threshold_0_17_0_0_0)
+```
+
+###################################################################
+##################### # Describing differences ####################
+###################################################################
+
+```{r comparing-sts}
+library(dplyr)
+#install.packages("eulerr")
+library(eulerr)
+
+# Create a named list: each lin_48 group -> unique STs
+## First filter out NAs
+cc269_relevant_lin_data <- cc269_relevant_lin_data %>%
+  mutate(ST = ifelse(is.na(ST), "NA", ST))
+cc269_relevant_lin_data_no_ST_NA <- cc269_relevant_lin_data %>%
+  filter(ST != "NA")
+
+## Write threshold 2 set
+lin48_sets <- cc269_relevant_lin_data %>%
+  group_by(lin_48) %>%
+  summarise(STs = list(unique(ST[!is.na(ST)]))) %>%
+  deframe()
+lin48_sets <- lin48_sets[lengths(lin48_sets) > 0]
+print(lin48_sets) # check
+
+# Make the Euler plot
+fit <- euler(lin48_sets)
+euler_plot <- plot(fit, labels = TRUE, quantities = TRUE)
+
+# Check overlapping ST
+all_STs <- unlist(lin48_sets)
+  
+  ## Find duplicated STs
+  overlapping_STs <- all_STs[duplicated(all_STs)]
+  
+  ## Unique overlapping STs
+  unique(overlapping_STs)
+
+```
+
+```{r lin-groups-data}
+# Stacked bar chart, year
+cc269_relevant_lin_data %>%
+  group_by(lin_48, year) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = year, y = count, fill = lin_48)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(x = "Year", y = "Count", fill = "LIN two group")
+
+# Stacked bar chart, country
+cc269_relevant_lin_data %>%
+  group_by(lin_48, country) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = country, y = count, fill = lin_48)) +
+  geom_bar(stat = "identity") +
+  coord_flip() + 
+  theme_minimal() +
+  labs(x = "Country", y = "Count", fill = "LIN two group")
+
+# Stacked bar chart, disease
+cc269_relevant_lin_data %>%
+  group_by(lin_48, disease) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = disease, y = count, fill = lin_48)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(x = "Disease", y = "Count", fill = "LIN two group")
+
+```
