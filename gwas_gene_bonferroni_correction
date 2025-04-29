@@ -1,0 +1,1 @@
+python /data/zool-bactgenomics/XXX/pyseer_env/pyseer/scripts/count_patterns.py gene_gwas_reduced_output.txt
