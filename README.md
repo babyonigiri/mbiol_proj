@@ -20,4 +20,6 @@ Scripts specific to the gene and unitig GWAS' are denoted with "gwas_gene_" and 
 Supplementary data files have the prefix "supplementary_data_".  
 - **Table S1**: Isolate IDs for the dataset used to determine LIN code groups  
 - **Table S2**: Isolate IDs for the dataset containing all isolates in prefix group "0", after quality filtering  
-- **Table S3**: Isolate IDs for the dataset containing the isolates used to build the FastTree for prefix group "0", after filtering to <2000 isolates for Genome Comparator alignment  
+- **Table S3**: Isolate IDs for the dataset containing the isolates used to build the FastTree for prefix group "0", after filtering to <2000 isolates for Genome Comparator alignment
+- **Table S4**: Isolate IDs for the GWAS dataset (0_15 and 0_17 isolates) and the sequencing statistics used for filtering
+- **Table S5**: Nine problematic isolate names that were removed from further GWAS analyses
