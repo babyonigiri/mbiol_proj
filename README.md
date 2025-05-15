@@ -1,4 +1,4 @@
-# Implementing the Life Identification Number Code System: Uncovering Gaps in Neisseria meningitidis Serogroup B Vaccine Coverage
+# Implementing the Life Identification Number Code System: Uncovering Gaps in Neisseria meningitidis Serogroup B ST-269 Vaccine Coverage
 Code and supplementary data used for this MBiol project.
 
 ## Describing cc269 LIN code assignments
@@ -23,3 +23,4 @@ Supplementary data files have the prefix "supplementary_data_".
 - **Table S3**: Isolate IDs for the dataset containing the isolates used to build the FastTree for prefix group "0", after filtering to <2000 isolates for Genome Comparator alignment
 - **Table S4**: Isolate IDs for the GWAS dataset (0_15 and 0_17 isolates) and the sequencing statistics used for filtering
 - **Table S5**: Nine problematic isolate names that were removed from further GWAS analyses
+- **Table S6**: Significant loci identified through the gene-based GWAS analysis
