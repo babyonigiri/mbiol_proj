@@ -1,4 +1,4 @@
-# Implementing the Life Identification Number Code System: Uncovering Gaps in Neisseria meningitidis Serogroup B ST-269 Vaccine Coverage
+# Implementing the Life Identification Number Code System: Uncovering Gaps in Neisseria meningitidis Serogroup B Clonal Complex ST-269 Vaccine Coverage
 Code and supplementary data used for this MBiol project.
 
 ## Describing cc269 LIN code assignments
