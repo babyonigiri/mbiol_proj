@@ -14,7 +14,10 @@ Scripts specific to the gene and unitig GWAS' are denoted with "gwas_gene_" and 
 
 1. Bakta (Slurm script for CommandLine)
 2. Panaroo (Slurm script for CommandLine)
-3. Pyseer (gene and unitig; Slurm script for Commandline)
+3. Pyseer (Gene and unitig; Slurm script for Commandline)
+4. Bonferroni correction (Provided script for CommandLine; requires cloning the pyseer repository)
+5. Extract significant .fas (Slurm script to extract .fas files of significant genes)
+6. Unitig caller (Slurm script to extend unitigs; no longer used for this analysis)
 
 ## Supplementary data
 Supplementary data files have the prefix "supplementary_data_".  
